@@ -1,0 +1,11 @@
+<div class="add-new-button">
+  <button matMiniFab [routerLink]="['/expenses/new']" type="button" aria-label="Add new expense">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+<pem-expense-table
+  [expenses]="expenses"
+  (editExpense)="onEdit($event)"
+  (deleteExpense)="onDelete($event)"
+>
+</pem-expense-table>
