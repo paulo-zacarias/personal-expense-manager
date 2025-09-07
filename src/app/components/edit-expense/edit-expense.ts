@@ -14,13 +14,6 @@ export class EditExpense implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private expenseService = inject(ExpenseService);
-  // expense = {
-  //   id: 1,
-  //   title: 'test',
-  //   amount: 100,
-  //   date: '2025/02/20',
-  //   note: 'some note',
-  // };
 
   expense!: Expense;
 
@@ -31,17 +24,11 @@ export class EditExpense implements OnInit {
     }
   }
 
-  onSubmit(updated: Expense) {
-    this.expenseService.updateExpense(this.expense.id!, updated).subscribe({
+  onSave(expense: Expense) {
+    this.expenseService.updateExpense(expense).subscribe({
       next: () => this.router.navigate(['/expenses']),
       error: (err) => console.error('Failed to update expense', err),
     });
-  }
-
-  onSave(expense: Expense) {
-    const { id: expenseId, ...updatedExpense } = expense;
-    console.log(expenseId);
-    console.log(updatedExpense);
   }
   onCancel() {
     this.router.navigateByUrl('/expenses');

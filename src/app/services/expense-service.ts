@@ -1,50 +1,55 @@
-import { Injectable, signal } from '@angular/core';
-import { delay, of } from 'rxjs';
+import { inject, Injectable } from '@angular/core';
+import { of, tap } from 'rxjs';
 import { Expense } from '../models/expense';
-import { dummyExpenses } from '../dummy_expenses';
+import { HttpClient, httpResource } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ExpenseService {
-  private _expenses = signal<Expense[]>(dummyExpenses);
-  expensesSignal = this._expenses;
+  private apiUrl = 'http://localhost:8080/expenses';
+  private expensesResource = httpResource<Expense[]>(() => this.apiUrl, { defaultValue: [] });
+  private http = inject(HttpClient);
+
+  expensesSignal = this.expensesResource.value;
 
   getExpenseById(id: number) {
-    const cached = this._expenses().find((e) => e.id === id);
+    const cached = this.expensesSignal().find((e) => e.id === id);
     console.log('cached?', cached);
 
-    // Check cache first
-    // const cached = this.getByIdCached(id);
-    if (cached) return of(cached);
+    if (cached) {
+      // Return cached value as an observable
+      return of(cached);
+    }
 
-    // Mock backend response
-    const mock: Expense = {
-      id,
-      title: 'Mock Expense',
-      amount: 100,
-      date: '2025-09-06', // ISO string
-      note: 'This is a mocked expense',
-    };
-
-    // Simulate HTTP delay
-    // return of(mock).pipe(delay(300));
-    return of(mock).pipe(delay(300));
+    // Fetch from server if not in cache
+    return this.http.get<Expense>(`${this.apiUrl}/${id}`);
   }
 
   addExpense(expense: Expense) {
-    const newExpense = { ...expense, id: Math.floor(Math.random() * 1000) };
-    this._expenses.update((list) => [...list, newExpense]);
-    return of(newExpense);
+    return this.http
+      .post<Expense>(this.apiUrl, expense)
+      .pipe(
+        tap((newExpense: Expense) => this.expensesSignal.update((list) => [...list, newExpense])),
+      );
   }
 
-  updateExpense(id: number, expense: Expense) {
-    this._expenses.update((list) => list.map((e) => (e.id === id ? { ...expense, id } : e)));
-    return of({ ...expense, id });
+  updateExpense(expense: Expense) {
+    const { id, ...updated } = expense;
+    return this.http
+      .put<Expense>(`${this.apiUrl}/${id}`, updated)
+      .pipe(
+        tap((expense: Expense) =>
+          this.expensesSignal.update((list) =>
+            list.map((e) => (e.id === id ? { ...expense, id } : e)),
+          ),
+        ),
+      );
   }
 
   deleteExpense(id: number) {
-    this._expenses.update((list) => list.filter((e) => e.id !== id));
-    return of(void 0);
+    return this.http
+      .delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(tap(() => this.expensesSignal.update((list) => list.filter((e) => e.id !== id))));
   }
 }

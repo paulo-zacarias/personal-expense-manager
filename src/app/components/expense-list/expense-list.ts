@@ -27,7 +27,6 @@ export class ExpenseList implements OnInit {
   }
 
   onDelete(expenseId: number) {
-    // TODO: add confirmation dialog
-    this.expenseService.deleteExpense(expenseId);
+    this.expenseService.deleteExpense(expenseId).subscribe((res: unknown) => console.log(res));
   }
 }

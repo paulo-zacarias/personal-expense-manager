@@ -15,9 +15,6 @@ export class AddExpense {
   private expenseService = inject(ExpenseService);
 
   onSave(expense: Expense) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id, ...newExpense } = expense;
-    // this.expenseService.addExpense()
     this.expenseService.addExpense(expense).subscribe({
       next: () => this.router.navigate(['/expenses']),
       error: (err) => console.error('Failed to add expense', err),
